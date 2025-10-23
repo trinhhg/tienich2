@@ -167,10 +167,10 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       if (typeof str !== 'string') return '';
       const htmlEntities = {
-        '&': '&',
-        '<': '<',
-        '>': '>',
-        '"': '"',
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
         "'": '&apos;'
       };
       return str.replace(/[&<>"']/g, match => htmlEntities[match]);
@@ -178,6 +178,11 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Lỗi trong escapeHtml:', error);
       return str || '';
     }
+  }
+
+  // Hàm escapeRegExp
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   // Hàm thay thế văn bản
@@ -218,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const pattern = new RegExp(`(^|\\n|\\.\\s)(<span class="highlight">${escapeRegExp(replace)}</span>)`, 'gi');
+      const pattern = new RegExp(`(^|\\n|\\.\\s)(<span class="highlight">${escapeRegExp(escapeHtml(replace))}</span>)`, 'gi');
       outputText = outputText.replace(pattern, (match, prefix, highlighted) => {
         const capitalized = replace.charAt(0).toUpperCase() + replace.slice(1);
         return `${prefix}<span class="highlight">${escapeHtml(capitalized)}</span>`;
@@ -447,6 +452,26 @@ document.addEventListener('DOMContentLoaded', () => {
     matchCaseEnabled = modeSettings.matchCase || false;
     updateButtonStates();
     console.log('Đã cập nhật trạng thái:', { matchCaseEnabled });
+  }
+
+  function saveSettings() {
+    const pairs = Array.from(document.querySelectorAll('.punctuation-item')).map(item => ({
+      find: item.querySelector('.find')?.value || '',
+      replace: item.querySelector('.replace')?.value || ''
+    }));
+
+    if (pairs.every(pair => !pair.find && !pair.replace)) {
+      showNotification(translations[currentLang].noPairsToSave, 'error');
+      return;
+    }
+
+    let settings = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || { modes: { default: { pairs: [], matchCase: false } } };
+    settings.modes[currentMode] = {
+      pairs: pairs.filter(pair => pair.find || pair.replace),
+      matchCase: matchCaseEnabled
+    };
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(settings));
+    showNotification(translations[currentLang].settingsSaved.replace('{mode}', currentMode), 'success');
   }
 
   function addPair(find = '', replace = '') {
@@ -920,3 +945,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(settings));
                 loadModes();
                 showNotification(translations[currentLang].settingsImported, 'success');
+              } catch (err) {
+                console.error('Lỗi khi nhập cài đặt:', err);
+                showNotification(translations[currentLang].importError, 'error');
+              }
+            };
+            reader.readAsText(file);
+          }
+        });
+        input.click();
+      });
+    } else {
+      console.error('Không tìm thấy nút Nhập Cài Đặt');
+    }
+
+    // Thêm sự kiện cho các nút tab
+    document.querySelectorAll('.tab-button').forEach(button => {
+      button.addEventListener('click', () => {
+        const tabId = button.getAttribute('data-tab');
+        document.querySelectorAll('.tab-content').forEach(content => {
+          content.classList.remove('active');
+        });
+        document.querySelectorAll('.tab-button').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        document.getElementById(tabId).classList.add('active');
+        button.classList.add('active');
+        saveInputState();
+      });
+    });
+
+    // Thêm sự kiện cho các nút split mode
+    document.querySelectorAll('.split-mode-button').forEach(button => {
+      button.addEventListener('click', () => {
+        const mode = parseInt(button.getAttribute('data-split-mode'));
+        updateSplitModeUI(mode);
+      });
+    });
+  }
+
+  // Khởi tạo giao diện
+  updateLanguage('vn');
+  restoreInputState();
+  loadModes();
+  updateSplitModeUI(currentSplitMode);
+  attachButtonEvents();
+});
