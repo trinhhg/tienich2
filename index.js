@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const state = {
       inputText: document.getElementById('input-text')?.value || '',
       splitInputText: document.getElementById('split-input-text')?.value || '',
+      outputText: document.getElementById('output-text')?.value || '',
       output1Text: document.getElementById('output1-text')?.value || '',
       output2Text: document.getElementById('output2-text')?.value || '',
       output3Text: document.getElementById('output3-text')?.value || '',
@@ -109,6 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (state.splitInputText && document.getElementById('split-input-text')) {
       document.getElementById('split-input-text').value = state.splitInputText;
       updateWordCount('split-input-text', 'split-input-word-count');
+    }
+    if (state.outputText && document.getElementById('output-text')) {
+      document.getElementById('output-text').value = state.outputText;
+      updateWordCount('output-text', 'output-word-count');
     }
     if (state.output1Text && document.getElementById('output1-text')) {
       document.getElementById('output1-text').value = state.output1Text;
@@ -189,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function replaceText(inputText, pairs, matchCase) {
     let outputText = inputText;
 
-    // Step 1: Perform the initial replacements with match case and highlight
+    // Step 1: Perform the initial replacements with highlight markers (**)
     pairs.forEach(pair => {
       let find = pair.find;
       let replace = pair.replace !== null ? pair.replace : '';
@@ -210,7 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
             replacement = replace.charAt(0).toUpperCase() + replace.slice(1).toLowerCase();
           }
         }
-        return `<span class="highlight">${escapeHtml(replacement)}</span>`;
+        return `**${replacement}**`; // Bọc từ thay thế bằng **
       });
     });
 
@@ -223,10 +228,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const pattern = new RegExp(`(^|\\n|\\.\\s)(<span class="highlight">${escapeRegExp(escapeHtml(replace))}</span>)`, 'gi');
+      const pattern = new RegExp(`(^|\\n|\\.\\s)(\\**${escapeRegExp(replace)}\\**)`, 'gi');
       outputText = outputText.replace(pattern, (match, prefix, highlighted) => {
         const capitalized = replace.charAt(0).toUpperCase() + replace.slice(1);
-        return `${prefix}<span class="highlight">${escapeHtml(capitalized)}</span>`;
+        return `${prefix}**${capitalized}**`;
       });
     });
 
@@ -312,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (elements.replaceTitle) elements.replaceTitle.textContent = translations[lang].replaceTitle;
     if (elements.inputText) elements.inputText.placeholder = translations[lang].inputText;
     if (elements.replaceButton) elements.replaceButton.textContent = translations[lang].replaceButton;
-    if (elements.outputText) elements.outputText.textContent = translations[lang].outputText;
+    if (elements.outputText) elements.outputText.placeholder = translations[lang].outputText;
     if (elements.copyButton) elements.copyButton.textContent = translations[lang].copyButton;
     if (elements.splitTitle) elements.splitTitle.textContent = translations[lang].splitTitle;
     if (elements.splitInputText) elements.splitInputText.placeholder = translations[lang].splitInputText;
@@ -373,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateButtonStates() {
     const matchCaseButton = document.getElementById('match-case');
     if (matchCaseButton) {
-      matchCaseButton.textContent = matchCaseEnabled ? translations[currentLang].matchCaseOn : translations[currentLang].matchCaseOff;
+      matchCaseButton.textContent = matchCaseEnabled ? translations[currentLang].matchCaseOn : translations[lang].matchCaseOff;
       matchCaseButton.style.background = matchCaseEnabled ? '#28a745' : '#6c757d';
     } else {
       console.error('Không tìm thấy nút Match Case');
@@ -398,7 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function countWords(text) {
-    return text.trim() ? text.split(/\s+/).filter(word => word.length > 0).length : 0;
+    return text.trim() ? text.replace(/\*\*/g, '').split(/\s+/).filter(word => word.length > 0).length : 0;
   }
 
   function updateWordCount(textareaId, counterId) {
@@ -748,6 +753,13 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
+    if (buttons.outputText) {
+      buttons.outputText.addEventListener('input', () => {
+        updateWordCount('output-text', 'output-word-count');
+        saveInputState();
+      });
+    }
+
     ['split-input-text', 'output1-text', 'output2-text', 'output3-text', 'output4-text',
      'output5-text', 'output6-text', 'output7-text', 'output8-text', 'output9-text', 'output10-text'].forEach(id => {
       const textarea = document.getElementById(id);
@@ -781,7 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const outputTextArea = document.getElementById('output-text');
         if (outputTextArea) {
-          outputTextArea.innerHTML = outputText;
+          outputTextArea.value = outputText;
           inputTextArea.value = '';
           updateWordCount('input-text', 'input-word-count');
           updateWordCount('output-text', 'output-word-count');
@@ -799,8 +811,9 @@ document.addEventListener('DOMContentLoaded', () => {
       buttons.copyButton.addEventListener('click', () => {
         console.log('Đã nhấp vào nút Sao chép');
         const outputTextArea = document.getElementById('output-text');
-        if (outputTextArea && outputTextArea.textContent) {
-          navigator.clipboard.writeText(outputTextArea.textContent).then(() => {
+        if (outputTextArea && outputTextArea.value) {
+          const textToCopy = outputTextArea.value.replace(/\*\*/g, ''); // Loại bỏ ** khi sao chép
+          navigator.clipboard.writeText(textToCopy).then(() => {
             console.log('Đã sao chép văn bản vào clipboard');
             showNotification(translations[currentLang].textCopied, 'success');
           }).catch(err => {
@@ -956,38 +969,3 @@ document.addEventListener('DOMContentLoaded', () => {
         input.click();
       });
     } else {
-      console.error('Không tìm thấy nút Nhập Cài Đặt');
-    }
-
-    // Thêm sự kiện cho các nút tab
-    document.querySelectorAll('.tab-button').forEach(button => {
-      button.addEventListener('click', () => {
-        const tabId = button.getAttribute('data-tab');
-        document.querySelectorAll('.tab-content').forEach(content => {
-          content.classList.remove('active');
-        });
-        document.querySelectorAll('.tab-button').forEach(btn => {
-          btn.classList.remove('active');
-        });
-        document.getElementById(tabId).classList.add('active');
-        button.classList.add('active');
-        saveInputState();
-      });
-    });
-
-    // Thêm sự kiện cho các nút split mode
-    document.querySelectorAll('.split-mode-button').forEach(button => {
-      button.addEventListener('click', () => {
-        const mode = parseInt(button.getAttribute('data-split-mode'));
-        updateSplitModeUI(mode);
-      });
-    });
-  }
-
-  // Khởi tạo giao diện
-  updateLanguage('vn');
-  restoreInputState();
-  loadModes();
-  updateSplitModeUI(currentSplitMode);
-  attachButtonEvents();
-});
