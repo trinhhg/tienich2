@@ -378,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateButtonStates() {
     const matchCaseButton = document.getElementById('match-case');
     if (matchCaseButton) {
-      matchCaseButton.textContent = matchCaseEnabled ? translations[currentLang].matchCaseOn : translations[lang].matchCaseOff;
+      matchCaseButton.textContent = matchCaseEnabled ? translations[currentLang].matchCaseOn : translations[currentLang].matchCaseOff;
       matchCaseButton.style.background = matchCaseEnabled ? '#28a745' : '#6c757d';
     } else {
       console.error('Không tìm thấy nút Match Case');
@@ -697,7 +697,7 @@ document.addEventListener('DOMContentLoaded', () => {
       buttons.copyModeButton.addEventListener('click', () => {
         console.log('Đã nhấp vào nút Sao Chép Chế Độ');
         const newMode = prompt(translations[currentLang].newModePrompt);
-        if (newMode && !newMode.includes('mode_') && newMode.trim() !== '' && newMode !== 'default') {
+        if (newMode && !newMode.includes('mode_') && newName.trim() !== '' && newMode !== 'default') {
           let settings = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || { modes: { default: { pairs: [], matchCase: false } } };
           if (settings.modes[newMode]) {
             showNotification(translations[currentLang].invalidModeName, 'error');
@@ -969,3 +969,45 @@ document.addEventListener('DOMContentLoaded', () => {
         input.click();
       });
     } else {
+      console.error('Không tìm thấy nút Nhập Cài Đặt');
+    }
+
+    // Gắn sự kiện cho các nút tab
+    const tabButtons = document.querySelectorAll('.tab-button');
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        console.log(`Đã nhấp vào tab: ${button.getAttribute('data-tab')}`);
+        const tabName = button.getAttribute('data-tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabContents.forEach(content => {
+          content.classList.toggle('active', content.id === tabName);
+        });
+        tabButtons.forEach(btn => {
+          btn.classList.toggle('active', btn === button);
+        });
+      });
+    });
+
+    // Gắn sự kiện cho các nút split mode
+    const splitModeButtons = document.querySelectorAll('.split-mode-button');
+    splitModeButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        console.log(`Đã chọn chế độ chia: ${button.getAttribute('data-split-mode')}`);
+        const mode = parseInt(button.getAttribute('data-split-mode'));
+        updateSplitModeUI(mode);
+      });
+    });
+  }
+
+  // Khởi tạo ứng dụng
+  function init() {
+    console.log('Khởi tạo ứng dụng');
+    updateLanguage('vn');
+    loadModes();
+    updateSplitModeUI(currentSplitMode);
+    attachButtonEvents();
+    restoreInputState();
+  }
+
+  init();
+});
