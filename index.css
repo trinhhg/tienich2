@@ -210,6 +210,8 @@ textarea {
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 textarea::-webkit-scrollbar {
@@ -229,6 +231,8 @@ textarea::-webkit-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
   white-space: pre-line; /* Đảm bảo giữ newline và cách dòng */
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 .output-text::-webkit-scrollbar {
@@ -239,6 +243,11 @@ textarea::-webkit-scrollbar {
   background-color: yellow;
   padding: 1px 2px;
   border-radius: 2px;
+}
+
+/* Highlight trong textarea bằng ký tự đặc biệt */
+textarea.output-text::selection, textarea.output-text .highlight-text {
+  background-color: yellow; /* Màu highlight cho văn bản được bọc bởi ** */
 }
 
 #output-text, #output1-text, #output2-text, #output3-text, #output4-text,
