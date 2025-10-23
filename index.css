@@ -228,6 +228,7 @@ textarea::-webkit-scrollbar {
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  white-space: pre-line; /* Đảm bảo giữ newline và cách dòng */
 }
 
 .output-text::-webkit-scrollbar {
@@ -265,68 +266,66 @@ textarea::-webkit-scrollbar {
   align-items: stretch;
 }
 
+/* Cho phép xuống dòng từ chế độ Chia 6 trở lên */
+.split-container.split-6,
+.split-container.split-7,
+.split-container.split-8,
+.split-container.split-9,
+.split-container.split-10 {
+  flex-wrap: wrap;
+}
+
+.split-container.split-6 .input-section,
+.split-container.split-6 .output-section,
+.split-container.split-7 .input-section,
+.split-container.split-7 .output-section,
+.split-container.split-8 .input-section,
+.split-container.split-8 .output-section,
+.split-container.split-9 .input-section,
+.split-container.split-9 .output-section,
+.split-container.split-10 .input-section,
+.split-container.split-10 .output-section {
+  flex: 1 0 calc(20% - 10px); /* Khoảng 5 ô/hàng, điều chỉnh gap 10px */
+  max-width: calc(20% - 10px); /* Đảm bảo 5 ô/hàng, thẳng hàng */
+  margin-bottom: 10px; /* Khoảng cách giữa hàng */
+}
+
+/* Căn giữa word-count và nút sao chép */
+.split-container.split-6 .word-count,
+.split-container.split-7 .word-count,
+.split-container.split-8 .word-count,
+.split-container.split-9 .word-count,
+.split-container.split-10 .word-count {
+  text-align: center;
+  width: 100%;
+}
+
+/* Quy tắc cho các chế độ split từ 2 đến 5 */
 .split-container.split-2 .input-section,
 .split-container.split-2 .output-section {
   flex: 1;
-  max-width: 33.33%;
+  max-width: calc(33.33% - 10px);
 }
 
 .split-container.split-3 .input-section,
 .split-container.split-3 .output-section {
   flex: 1;
-  max-width: 25%;
-  height: 100%;
+  max-width: calc(25% - 10px);
 }
 
 .split-container.split-4 .input-section,
 .split-container.split-4 .output-section {
   flex: 1;
-  max-width: 20%;
-  height: 100%;
+  max-width: calc(20% - 10px);
 }
 
 .split-container.split-5 .input-section,
 .split-container.split-5 .output-section {
   flex: 1;
-  max-width: 16.67%;
-  height: 100%;
+  max-width: calc(16.67% - 10px);
 }
 
-.split-container.split-6 .input-section,
-.split-container.split-6 .output-section {
-  flex: 1;
-  max-width: 14.29%;
-  height: 100%;
-}
-
-.split-container.split-7 .input-section,
-.split-container.split-7 .output-section {
-  flex: 1;
-  max-width: 12.5%;
-  height: 100%;
-}
-
-.split-container.split-8 .input-section,
-.split-container.split-8 .output-section {
-  flex: 1;
-  max-width: 11.11%;
-  height: 100%;
-}
-
-.split-container.split-9 .input-section,
-.split-container.split-9 .output-section {
-  flex: 1;
-  max-width: 10%;
-  height: 100%;
-}
-
-.split-container.split-10 .input-section,
-.split-container.split-10 .output-section {
-  flex: 1;
-  max-width: 9.09%;
-  height: 100%;
-}
-
+/* Định dạng textarea trong tab Chia Chương */
 #split-input-text, #output1-text, #output2-text, #output3-text, #output4-text,
 #output5-text, #output6-text, #output7-text, #output8-text, #output9-text, #output10-text {
   width: 100%;
@@ -392,53 +391,6 @@ textarea::-webkit-scrollbar {
 .copy-buttons button {
   width: 100%;
   padding: 10px 0;
-  margin: 0;
-}
-
-.split-container.split-3 .input-section,
-.split-container.split-3 .output-section,
-.split-container.split-4 .input-section,
-.split-container.split-4 .output-section,
-.split-container.split-5 .input-section,
-.split-container.split-5 .output-section,
-.split-container.split-6 .input-section,
-.split-container.split-6 .output-section,
-.split-container.split-7 .input-section,
-.split-container.split-7 .output-section,
-.split-container.split-8 .input-section,
-.split-container.split-8 .output-section,
-.split-container.split-9 .input-section,
-.split-container.split-9 .output-section,
-.split-container.split-10 .input-section,
-.split-container.split-10 .output-section {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.split-container.split-3 .word-count,
-.split-container.split-4 .word-count,
-.split-container.split-5 .word-count,
-.split-container.split-6 .word-count,
-.split-container.split-7 .word-count,
-.split-container.split-8 .word-count,
-.split-container.split-9 .word-count,
-.split-container.split-10 .word-count {
-  text-align: center;
-  width: 100%;
-  margin: 5px 0;
-}
-
-.split-container.split-3 .copy-buttons button,
-.split-container.split-4 .copy-buttons button,
-.split-container.split-5 .copy-buttons button,
-.split-container.split-6 .copy-buttons button,
-.split-container.split-7 .copy-buttons button,
-.split-container.split-8 .copy-buttons button,
-.split-container.split-9 .copy-buttons button,
-.split-container.split-10 .copy-buttons button {
-  width: 100%;
   margin: 0;
 }
 
