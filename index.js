@@ -194,29 +194,38 @@ document.addEventListener('DOMContentLoaded', () => {
   function replaceText(inputText, pairs, matchCase) {
     let outputText = inputText;
 
-    // Step 1: Perform the initial replacements with highlight markers (**)
+    // Tạo map find: replace
+    const map = {};
     pairs.forEach(pair => {
       let find = pair.find;
       let replace = pair.replace !== null ? pair.replace : '';
       if (!find) return;
+      if (!matchCase) {
+        find = find.toLowerCase(); // Normalize key if case-insensitive
+      }
+      map[find] = replace;
+    });
 
-      const escapedFind = escapeRegExp(find);
-      const regexFlags = matchCase ? 'g' : 'gi';
-      const regex = new RegExp(escapedFind, regexFlags);
+    // Gộp tất cả find vào regex chung
+    const escapedKeys = Object.keys(map).map(k => escapeRegExp(k));
+    if (escapedKeys.length === 0) return outputText;
+    const regexFlags = matchCase ? 'g' : 'gi';
+    const regex = new RegExp(escapedKeys.join('|'), regexFlags);
 
-      outputText = outputText.replace(regex, (match) => {
-        let replacement = replace;
-        if (!matchCase) {
-          if (match === match.toUpperCase()) {
-            replacement = replace.toUpperCase();
-          } else if (match === match.toLowerCase()) {
-            replacement = replace.toLowerCase();
-          } else if (match[0] === match[0].toUpperCase()) {
-            replacement = replace.charAt(0).toUpperCase() + replace.slice(1).toLowerCase();
-          }
+    // Replace một lần
+    outputText = outputText.replace(regex, (matched) => {
+      const key = matchCase ? matched : matched.toLowerCase();
+      let replacement = map[key];
+      if (!matchCase) {
+        if (matched === matched.toUpperCase()) {
+          replacement = replacement.toUpperCase();
+        } else if (matched === matched.toLowerCase()) {
+          replacement = replacement.toLowerCase();
+        } else if (matched[0] === matched[0].toUpperCase()) {
+          replacement = replacement.charAt(0).toUpperCase() + replacement.slice(1).toLowerCase();
         }
-        return `**${replacement}**`; // Bọc từ thay thế bằng **
-      });
+      }
+      return replacement;
     });
 
     // Step 2: Capitalize first letter of replaced words at start of line or after ". "
@@ -228,10 +237,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const pattern = new RegExp(`(^|\\n|\\.\\s)(\\**${escapeRegExp(replace)}\\**)`, 'gi');
-      outputText = outputText.replace(pattern, (match, prefix, highlighted) => {
-        const capitalized = replace.charAt(0).toUpperCase() + replace.slice(1);
-        return `${prefix}**${capitalized}**`;
+      const escapedReplace = escapeRegExp(replace);
+      const pattern = new RegExp(`(^|\\n|\\.\\s)(${escapedReplace})`, matchCase ? 'g' : 'gi');
+      outputText = outputText.replace(pattern, (match, prefix, word) => {
+        return `${prefix}${word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()}`;
       });
     });
 
@@ -403,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function countWords(text) {
-    return text.trim() ? text.replace(/\*\*/g, '').split(/\s+/).filter(word => word.length > 0).length : 0;
+    return text.trim() ? text.split(/\s+/).filter(word => word.length > 0).length : 0;
   }
 
   function updateWordCount(textareaId, counterId) {
@@ -605,8 +614,8 @@ document.addEventListener('DOMContentLoaded', () => {
       output8Text: document.getElementById('output8-text'),
       output9Text: document.getElementById('output9-text'),
       output10Text: document.getElementById('output10-text'),
-      exportSettingsButton: document.getElementById('export-settings'),
-      importSettingsButton: document.getElementById('import-settings')
+      exportSettings: document.getElementById('export-settings'),
+      importSettings: document.getElementById('import-settings')
     };
 
     if (buttons.facebookLink) {
@@ -697,7 +706,7 @@ document.addEventListener('DOMContentLoaded', () => {
       buttons.copyModeButton.addEventListener('click', () => {
         console.log('Đã nhấp vào nút Sao Chép Chế Độ');
         const newMode = prompt(translations[currentLang].newModePrompt);
-        if (newMode && !newMode.includes('mode_') && newName.trim() !== '' && newMode !== 'default') {
+        if (newMode && !newMode.includes('mode_') && newMode.trim() !== '' && newMode !== 'default') {
           let settings = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || { modes: { default: { pairs: [], matchCase: false } } };
           if (settings.modes[newMode]) {
             showNotification(translations[currentLang].invalidModeName, 'error');
@@ -812,8 +821,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Đã nhấp vào nút Sao chép');
         const outputTextArea = document.getElementById('output-text');
         if (outputTextArea && outputTextArea.value) {
-          const textToCopy = outputTextArea.value.replace(/\*\*/g, ''); // Loại bỏ ** khi sao chép
-          navigator.clipboard.writeText(textToCopy).then(() => {
+          navigator.clipboard.writeText(outputTextArea.value).then(() => {
             console.log('Đã sao chép văn bản vào clipboard');
             showNotification(translations[currentLang].textCopied, 'success');
           }).catch(err => {
