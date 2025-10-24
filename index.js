@@ -683,7 +683,7 @@ document.addEventListener('DOMContentLoaded', () => {
       buttons.addModeButton.addEventListener('click', () => {
         console.log('Đã nhấp vào nút Thêm Chế Độ');
         const newMode = prompt(translations[currentLang].newModePrompt);
-        if (newMode && !newMode.includes('mode_') && newName.trim() !== '' && newMode !== 'default') {
+        if (newMode && !newMode.includes('mode_') && newMode.trim() !== '' && newMode !== 'default') {
           let settings = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || { modes: { default: { pairs: [], matchCase: false } } };
           if (settings.modes[newMode]) {
             showNotification(translations[currentLang].invalidModeName, 'error');
