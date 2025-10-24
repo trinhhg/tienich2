@@ -239,13 +239,14 @@ textarea::-webkit-scrollbar {
   display: none;
 }
 
+/* Bỏ highlight */
 .highlight {
   background-color: yellow;
   padding: 1px 2px;
   border-radius: 2px;
 }
 
-/* Highlight trong textarea bằng ký tự đặc biệt */
+/* Bỏ highlight trong textarea bằng ký tự đặc biệt */
 textarea.output-text::selection, textarea.output-text .highlight-text {
   background-color: yellow; /* Màu highlight cho văn bản được bọc bởi ** */
 }
