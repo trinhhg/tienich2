@@ -683,7 +683,7 @@ document.addEventListener('DOMContentLoaded', () => {
       buttons.addModeButton.addEventListener('click', () => {
         console.log('Đã nhấp vào nút Thêm Chế Độ');
         const newMode = prompt(translations[currentLang].newModePrompt);
-        if (newMode && !newMode.includes('mode_') && newMode.trim() !== '' && newMode !== 'default') {
+        if (newMode && !newMode.includes('mode_') && newName.trim() !== '' && newMode !== 'default') {
           let settings = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || { modes: { default: { pairs: [], matchCase: false } } };
           if (settings.modes[newMode]) {
             showNotification(translations[currentLang].invalidModeName, 'error');
@@ -933,51 +933,76 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    if (buttons.exportSettingsButton) {
-      buttons.exportSettingsButton.addEventListener('click', () => {
+    if (buttons.exportSettings) {
+      buttons.exportSettings.addEventListener('click', () => {
         console.log('Đã nhấp vào nút Xuất Cài Đặt');
-        let settings = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || { modes: { default: { pairs: [], matchCase: false } } };
-        const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'extension_settings.json';
-        a.click();
-        URL.revokeObjectURL(url);
-        showNotification(translations[currentLang].settingsExported, 'success');
+        try {
+          let settings = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || { modes: { default: { pairs: [], matchCase: false } } };
+          const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'extension_settings.json';
+          document.body.appendChild(a); // Thêm vào DOM để đảm bảo click hoạt động
+          a.click();
+          document.body.removeChild(a); // Xóa sau khi click
+          URL.revokeObjectURL(url);
+          showNotification(translations[currentLang].settingsExported, 'success');
+        } catch (err) {
+          console.error('Lỗi khi xuất cài đặt:', err);
+          showNotification(translations[currentLang].importError, 'error');
+        }
       });
     } else {
-      console.error('Không tìm thấy nút Xuất Cài Đặt');
+      console.error('Không tìm thấy nút Xuất Cài Đặt (ID: export-settings)');
     }
 
-    if (buttons.importSettingsButton) {
-      buttons.importSettingsButton.addEventListener('click', () => {
+    if (buttons.importSettings) {
+      buttons.importSettings.addEventListener('click', () => {
         console.log('Đã nhấp vào nút Nhập Cài Đặt');
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        input.addEventListener('change', (event) => {
-          const file = event.target.files[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              try {
-                const settings = JSON.parse(e.target.result);
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(settings));
-                loadModes();
-                showNotification(translations[currentLang].settingsImported, 'success');
-              } catch (err) {
-                console.error('Lỗi khi nhập cài đặt:', err);
+        try {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.accept = '.json';
+          input.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                try {
+                  const settings = JSON.parse(e.target.result);
+                  // Kiểm tra cấu trúc settings
+                  if (!settings.modes || typeof settings.modes !== 'object') {
+                    throw new Error('Cấu trúc file JSON không hợp lệ');
+                  }
+                  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(settings));
+                  loadModes();
+                  showNotification(translations[currentLang].settingsImported, 'success');
+                } catch (err) {
+                  console.error('Lỗi khi nhập cài đặt:', err);
+                  showNotification(translations[currentLang].importError, 'error');
+                }
+              };
+              reader.onerror = (err) => {
+                console.error('Lỗi khi đọc file:', err);
                 showNotification(translations[currentLang].importError, 'error');
-              }
-            };
-            reader.readAsText(file);
-          }
-        });
-        input.click();
+              };
+              reader.readAsText(file);
+            } else {
+              console.error('Không có file được chọn');
+              showNotification(translations[currentLang].importError, 'error');
+            }
+          });
+          document.body.appendChild(input); // Thêm vào DOM để đảm bảo click hoạt động
+          input.click();
+          document.body.removeChild(input); // Xóa sau khi click
+        } catch (err) {
+          console.error('Lỗi khi tạo input file:', err);
+          showNotification(translations[currentLang].importError, 'error');
+        }
       });
     } else {
-      console.error('Không tìm thấy nút Nhập Cài Đặt');
+      console.error('Không tìm thấy nút Nhập Cài Đặt (ID: import-settings)');
     }
 
     // Gắn sự kiện cho các nút tab
